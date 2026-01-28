@@ -1,0 +1,670 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "fdef8bbc-b059-4ad0-bff5-3d257d492ae4",
+              "name": "userMessage",
+              "value": "={{ $json.message.text }}",
+              "type": "string"
+            },
+            {
+              "id": "880e7596-d363-4b79-98aa-143c5773ccee",
+              "name": "phoneNumber",
+              "value": "={{ $json.message.from.id }}",
+              "type": "string"
+            },
+            {
+              "id": "2c0cd601-5104-49eb-b6c4-082b405dd2cb",
+              "name": "sessionId",
+              "value": "={{ $json.message.from.id }}",
+              "type": "string"
+            },
+            {
+              "id": "523c13c8-55db-4754-b6a1-0d49e67e59a2",
+              "name": "chatId",
+              "value": "={{ $json.message.chat.id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "08394c28-746b-4104-9687-f507edbc5b00",
+      "name": "Workflow Configuration",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2384,
+        2720
+      ]
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"date\": \"string\",\n  \"time\": \"string\",\n  \"phone_number\": \"string\",\n  \"purpose\": \"string\"\n}",
+        "autoFix": true
+      },
+      "id": "af929443-abed-4267-b420-6f95266f652a",
+      "name": "Structured Output Parser",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        2808,
+        2944
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4.1",
+          "mode": "list",
+          "cachedResultName": "gpt-4.1"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "id": "08327df1-a5cf-45f2-8080-b3da9d45343e",
+      "name": "OpenAI Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        2740,
+        3152
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "krmDuaLpNf1ZVxDP",
+          "name": "n8n free OpenAI API credits"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "contextWindowLength": "={{ 5 }}"
+      },
+      "id": "90143378-379a-47d7-a6d6-775727bf8e19",
+      "name": "Simple Memory",
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        2680,
+        2944
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('Workflow Configuration').item.json.userMessage }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "=You are an appointment scheduling assistant. Extract the following information from the user's message:\n\n- date: in YYYY-MM-DD format (if no year is provided then assume it is 2026)\n- time: in HH:MM:SS 24-hour format\n- phone_number: as a combination of numbers\n- purpose: the reason for the appointment (if no purpose is mentioned make it 'No purpose mentioned')\n\nAlways respond in a friendly, professional manner."
+        }
+      },
+      "id": "b8d8bd4e-9125-464b-80f3-00854e4f5618",
+      "name": "AI Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        2608,
+        2720
+      ],
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "id-1",
+              "name": "appointmentDate",
+              "value": "={{ $json.output.date }}",
+              "type": "string"
+            },
+            {
+              "id": "id-2",
+              "name": "appointmentTime",
+              "value": "={{ $json.output.time }}",
+              "type": "string"
+            },
+            {
+              "id": "id-3",
+              "name": "appointmentPurpose",
+              "value": "={{ $json.output.purpose }}",
+              "type": "string"
+            },
+            {
+              "id": "id-4",
+              "name": "phoneNumber",
+              "value": "={{ $json.output.phone_number }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "dce6c029-373b-4e04-9cd2-0e9e97ccc225",
+      "name": "Format Appointment Data",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        3400,
+        2624
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "id-1",
+              "leftValue": "={{ $('Get row(s) in sheet').all().map(item => item.json.Date) }}",
+              "rightValue": "={{ $('AI Agent').item.json.output.date }}",
+              "operator": {
+                "type": "array",
+                "operation": "contains",
+                "rightType": "any"
+              }
+            },
+            {
+              "id": "53300a22-21ab-4459-9a7a-da3b4630f72e",
+              "leftValue": "={{ $('Get row(s) in sheet').all().map(item => item.json.Time) }}",
+              "rightValue": "={{ $('AI Agent').item.json.output.time }}",
+              "operator": {
+                "type": "array",
+                "operation": "contains",
+                "rightType": "any"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "aaf1b338-9ff8-41d1-b0ff-c62fff0c9bd1",
+      "name": "Check Availability",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        3848,
+        2624
+      ],
+      "alwaysOutputData": false,
+      "executeOnce": false
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1nMfUvFF0YcYxQLvn26Cnjl5TiEhZZ4kPCXUndhx8Sts",
+          "mode": "list",
+          "cachedResultName": "n8n time scheduler",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1nMfUvFF0YcYxQLvn26Cnjl5TiEhZZ4kPCXUndhx8Sts/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1nMfUvFF0YcYxQLvn26Cnjl5TiEhZZ4kPCXUndhx8Sts/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        3624,
+        2624
+      ],
+      "id": "33848aa1-42bf-4111-a8d8-3e67bdf7cef4",
+      "name": "Get row(s) in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "KCuhfrW4I0sj96Kk",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1nMfUvFF0YcYxQLvn26Cnjl5TiEhZZ4kPCXUndhx8Sts",
+          "mode": "list",
+          "cachedResultName": "n8n time scheduler",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1nMfUvFF0YcYxQLvn26Cnjl5TiEhZZ4kPCXUndhx8Sts/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1nMfUvFF0YcYxQLvn26Cnjl5TiEhZZ4kPCXUndhx8Sts/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Date": "={{ $('Format Appointment Data').item.json.appointmentDate }}",
+            "Time": "={{ $('Format Appointment Data').item.json.appointmentTime }}",
+            "Purpose": "={{ $('Format Appointment Data').item.json.appointmentPurpose ?? \"No purpose mentioned\"}}",
+            "Phone Number #": "={{ $('Format Appointment Data').item.json.phoneNumber }}"
+          },
+          "matchingColumns": [
+            "Phone Number"
+          ],
+          "schema": [
+            {
+              "id": "Phone Number #",
+              "displayName": "Phone Number #",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Date",
+              "displayName": "Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Time",
+              "displayName": "Time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Purpose",
+              "displayName": "Purpose",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        4072,
+        2720
+      ],
+      "id": "6d470362-edff-4ba0-9d5c-d0fea2e83d34",
+      "name": "Append row in sheet",
+      "executeOnce": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "KCuhfrW4I0sj96Kk",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        2160,
+        2624
+      ],
+      "id": "463ee244-0540-4bf4-ab3c-0f8289b44c62",
+      "name": "Click Trigger (Test)",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "32ad39dc-dd9b-4731-bbef-eadd433aee26",
+              "leftValue": "={{ $json.output.date }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "c850e18c-4517-48c6-8045-9c94f0aa4983",
+              "leftValue": "={{ $json.output.purpose ?? \"No purpose mentioned\"}}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "bb434736-5b77-4b08-9a8f-9742a211d430",
+              "leftValue": "={{ $json.output.time }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "cc700a95-11ea-4e57-b0ca-143215e49905",
+              "leftValue": "={{ $json.output.phone_number }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        3176,
+        2720
+      ],
+      "id": "27455e30-12f4-4dff-b3be-fd96238855c9",
+      "name": "If (Correct output json)"
+    },
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        2160,
+        2816
+      ],
+      "id": "0a98b36f-647a-4e31-acde-12aadafb8f7f",
+      "name": "Telegram Trigger",
+      "webhookId": "9f481d0b-9bbc-43c7-bd24-dc536c7ee4dd",
+      "alwaysOutputData": false,
+      "credentials": {
+        "telegramApi": {
+          "id": "ylGSxhCG2ZQ5zKgV",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Workflow Configuration').item.json.chatId }}",
+        "text": "=Unfortunately, the time slot on {{ $('Format Appointment Data').item.json.appointmentDate }} at {{ $('Format Appointment Data').item.json.appointmentTime }} is already booked. Please suggest an alternative date and time, and I'll check availability for you.",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        4072,
+        2528
+      ],
+      "id": "baaa7257-0a36-4ad3-9cc4-0a306a545ffd",
+      "name": "Send Unavailable Message",
+      "webhookId": "2701eb5d-bf31-4dcb-9ca1-1164dba26c02",
+      "executeOnce": true,
+      "credentials": {
+        "telegramApi": {
+          "id": "ylGSxhCG2ZQ5zKgV",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Workflow Configuration').item.json.chatId }}",
+        "text": "I need more information to schedule your appointment. Please provide the date, time, phone number and purpose of your appointment.",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        3400,
+        2816
+      ],
+      "id": "2b92f056-6b81-4ec6-95aa-933217e33bed",
+      "name": "Send error message",
+      "webhookId": "2701eb5d-bf31-4dcb-9ca1-1164dba26c02",
+      "executeOnce": true,
+      "credentials": {
+        "telegramApi": {
+          "id": "ylGSxhCG2ZQ5zKgV",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Workflow Configuration').item.json.chatId }}",
+        "text": "=Great! Your appointment has been confirmed for {{ $('Format Appointment Data').item.json.appointmentDate }} at {{ $('Format Appointment Data').item.json.appointmentTime }} for {{ $('Format Appointment Data').item.json.appointmentPurpose }}. We look forward to seeing you!",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        4296,
+        2720
+      ],
+      "id": "43c6279f-b0f1-49b9-8ff9-70a344cbe258",
+      "name": "Send Confirmation Message",
+      "webhookId": "2701eb5d-bf31-4dcb-9ca1-1164dba26c02",
+      "executeOnce": true,
+      "credentials": {
+        "telegramApi": {
+          "id": "ylGSxhCG2ZQ5zKgV",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "This is an automated appointment booking system that works through WhatsApp (or telegram). When someone sends you a message requesting an appointment, the system automatically checks your availability in Google Sheets and either confirms the booking or notifies them the slot is taken.\nHow It Works\n\n    Receives appointment requests via WhatsApp(or telegram) with date, time, and contact details\n    Extracts the information automatically from the message\n    Checks availability against your existing appointments in Google Sheets\n    Responds instantly - either confirming the booking or suggesting the slot is unavailable\n    Records confirmed appointments directly to your Google Sheet\n\nKey Features\n\n    Smart conflict detection: Stops checking after finding the first scheduling conflict, ensuring accurate availability responses\n    Automatic data extraction: Pulls name, date, time, and phone number from natural language messages\n    Real-time updates: Appointments are immediately added to your Google Sheet\n    Two-way communication: Sends confirmation or unavailability messages back through WhatsApp(or telegram)\n\nWhy It's Important\n\n    Saves time: Eliminates manual back-and-forth for appointment scheduling\n    Prevents double-booking: Automatically checks existing appointments before confirming\n    24/7 availability: Customers can book appointments anytime without waiting for business hours\n    Reduces errors: Automated data entry minimizes human mistakes\n    Professional experience: Instant responses improve customer satisfaction\n\nUse Cases\n\nPerfect for:\n\n    Medical clinics and dental offices\n    Salons and spas\n    Consulting services\n    Tutoring and coaching\n    Any service-based business with appointment scheduling\n\nSetup Requirements\n\n    Google Sheets account with a spreadsheet containing appointment columns (Name, Date, Time, Phone)\n    WhatsApp Business API connection(or Telegram Bot API)\n    n8n workflow automation platform\n\nThis tool transforms appointment management from a manual, time-consuming task into a seamless automated process.\n",
+        "height": 512,
+        "width": 880
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        2544,
+        2064
+      ],
+      "id": "5df46c55-b6d0-431c-9e73-f81f4f2696f0",
+      "name": "Sticky Note"
+    }
+  ],
+  "connections": {
+    "Workflow Configuration": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Structured Output Parser",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "If (Correct output json)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Appointment Data": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Availability": {
+      "main": [
+        [
+          {
+            "node": "Send Unavailable Message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Check Availability",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Send Confirmation Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Click Trigger (Test)": {
+      "main": [
+        [
+          {
+            "node": "Workflow Configuration",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If (Correct output json)": {
+      "main": [
+        [
+          {
+            "node": "Format Appointment Data",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send error message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Workflow Configuration",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "493174346e7d76f3cf796cf0b69523c1ce6884223ef8f33b76864629dd0fd60d"
+  }
+}
