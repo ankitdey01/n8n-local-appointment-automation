@@ -7,7 +7,7 @@ Users can request appointments via chat, and the system instantly checks availab
 
 ## 📸 Workflow Overview
 
-![n8n Appointment Automation Workflow](docs/workflow.png)
+![n8n Appointment Automation Workflow](working-proto/workflow.png)
 
 > This image shows the complete n8n automation flow used for message parsing, availability checking, conflict detection, and confirmation replies.
 
