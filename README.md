@@ -85,6 +85,11 @@ Perfect for:
 
 ---
 
+## 🔧 Requirements:
+
+- TELEGRAM_BOT_TOKEN=your_bot_token
+- GOOGLE_SHEET_ID=your_sheet_id
+
 ## 📋 Google Sheets Structure
 
 Your Google Sheet should follow this structure:
